@@ -11,7 +11,7 @@ En este ejercicio, creará una nueva aplicación de Azure AD con el centro de ad
 1. Seleccione **Nuevo registro**. En la página **Registrar una aplicación**, establezca los valores siguientes.
 
     - Establezca **Nombre** como `.NET Core Graph Tutorial`.
-    - Establezca los **tipos de cuenta admitidos** **en las cuentas de cualquier directorio de la organización**.
+    - Establezca **Tipos de cuenta admitidos** en **Cuentas en cualquier directorio de organización y cuentas personales de Microsoft**.
     - Deje **URI de redireccionamiento** vacía.
 
     ![Captura de pantalla de la página registrar una aplicación](./images/aad-register-an-app.png)
