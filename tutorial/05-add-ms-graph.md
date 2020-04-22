@@ -7,78 +7,50 @@ En este ejercicio, incorporará Microsoft Graph a la aplicación. Para esta apli
 1. Cree un nuevo directorio en el directorio **GraphTutorial** denominado **Graph**.
 1. Cree un nuevo archivo en el directorio de **Graph** denominado **GraphHelper.CS** y agregue el siguiente código a ese archivo.
 
-```csharp
-using Microsoft.Graph;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+    ```csharp
+    using Microsoft.Graph;
+    using System;
+    using System.Collections.Generic;
+    using System.Threading.Tasks;
 
-namespace GraphTutorial
-{
-    public class GraphHelper
+    namespace GraphTutorial
     {
-        private static GraphServiceClient graphClient;
-        public static void Initialize(IAuthenticationProvider authProvider)
+        public class GraphHelper
         {
-            graphClient = new GraphServiceClient(authProvider);
-        }
-
-        public static async Task<User> GetMeAsync()
-        {
-            try
+            private static GraphServiceClient graphClient;
+            public static void Initialize(IAuthenticationProvider authProvider)
             {
-                // GET /me
-                return await graphClient.Me.Request().GetAsync();
+                graphClient = new GraphServiceClient(authProvider);
             }
-            catch (ServiceException ex)
+
+            public static async Task<User> GetMeAsync()
             {
-                Console.WriteLine($"Error getting signed-in user: {ex.Message}");
-                return null;
+                try
+                {
+                    // GET /me
+                    return await graphClient.Me.Request().GetAsync();
+                }
+                catch (ServiceException ex)
+                {
+                    Console.WriteLine($"Error getting signed-in user: {ex.Message}");
+                    return null;
+                }
             }
         }
     }
-}
-```
+    ```
 
-Agregue el siguiente código en `Main` **Program.CS** justo después de la `GetAccessToken` llamada para obtener el usuario y generar el nombre para mostrar del usuario.
+1. Agregue el siguiente código en `Main` **Program.CS** justo después de la `GetAccessToken` llamada para obtener el usuario y generar el nombre para mostrar del usuario.
 
-```csharp
-// Initialize Graph client
-GraphHelper.Initialize(authProvider);
-
-// Get signed in user
-var user = GraphHelper.GetMeAsync().Result;
-Console.WriteLine($"Welcome {user.DisplayName}!\n");
-```
+    :::code language="csharp" source="../demo/GraphTutorial/Program.cs" id="GetUserSnippet":::
 
 Si ejecuta la aplicación ahora, una vez que inicie sesión en la aplicación, le agradecerá por su nombre.
 
 ## <a name="get-calendar-events-from-outlook"></a>Obtener eventos de calendario de Outlook
 
-Agregue la siguiente función a la `GraphHelper` clase para obtener los eventos del calendario del usuario.
+1. Agregue la siguiente función a la `GraphHelper` clase para obtener los eventos del calendario del usuario.
 
-```csharp
-public static async Task<IEnumerable<Event>> GetEventsAsync()
-{
-    try
-    {
-        // GET /me/events
-        var resultPage = await graphClient.Me.Events.Request()
-            // Only return the fields used by the application
-            .Select("subject,organizer,start,end")
-            // Sort results by when they were created, newest first
-            .OrderBy("createdDateTime DESC")
-            .GetAsync();
-
-        return resultPage.CurrentPage;
-    }
-    catch (ServiceException ex)
-    {
-        Console.WriteLine($"Error getting events: {ex.Message}");
-        return null;
-    }
-}
-```
+    :::code language="csharp" source="../demo/GraphTutorial/Graph/GraphHelper.cs" id="GetEventsSnippet":::
 
 Tenga en cuenta lo que está haciendo este código.
 
@@ -90,76 +62,47 @@ Tenga en cuenta lo que está haciendo este código.
 
 1. Agregue la siguiente función a la `Program` clase para dar formato a las propiedades de [DateTimeTimeZone](/graph/api/resources/datetimetimezone?view=graph-rest-1.0) de Microsoft Graph a un formato fácil de uso.
 
-```csharp
-static string FormatDateTimeTimeZone(Microsoft.Graph.DateTimeTimeZone value)
-{
-    // Get the timezone specified in the Graph value
-    var timeZone = TimeZoneInfo.FindSystemTimeZoneById(value.TimeZone);
-    // Parse the date/time string from Graph into a DateTime
-    var dateTime = DateTime.Parse(value.DateTime);
-
-    // Create a DateTimeOffset in the specific timezone indicated by Graph
-    var dateTimeWithTZ = new DateTimeOffset(dateTime, timeZone.BaseUtcOffset)
-        .ToLocalTime();
-
-    return dateTimeWithTZ.ToString("g");
-}
-```
+    :::code language="csharp" source="../demo/GraphTutorial/Program.cs" id="FormatDateSnippet":::
 
 1. Agregue la siguiente función a la `Program` clase para obtener los eventos del usuario y enviarlos a la consola.
 
-```csharp
-static void ListCalendarEvents()
-{
-    var events = GraphHelper.GetEventsAsync().Result;
+    :::code language="csharp" source="../demo/GraphTutorial/Program.cs" id="ListEventsSnippet":::
 
-    Console.WriteLine("Events:");
+1. Agregue lo siguiente justo después del `// List the calendar` comentario en la `Main` función.
 
-    foreach (var calendarEvent in events)
-    {
-        Console.WriteLine($"Subject: {calendarEvent.Subject}");
-        Console.WriteLine($"  Organizer: {calendarEvent.Organizer.EmailAddress.Name}");
-        Console.WriteLine($"  Start: {FormatDateTimeTimeZone(calendarEvent.Start)}");
-        Console.WriteLine($"  End: {FormatDateTimeTimeZone(calendarEvent.End)}");
-    }
-}
-```
+    ```csharp
+    ListCalendarEvents();
+    ```
 
-Por último, agregue lo siguiente justo después `// List the calendar` del comentario en `Main` la función.
+1. Guarde todos los cambios y ejecute la aplicación. Elija la opción **lista de eventos de calendario** para ver una lista de los eventos del usuario.
 
-```csharp
-ListCalendarEvents();
-```
+    ```Shell
+    Welcome Adele Vance
 
-Guarde todos los cambios y ejecute la aplicación. Elija la opción **lista de eventos de calendario** para ver una lista de los eventos del usuario.
-
-```Shell
-Welcome Adele Vance
-
-Please choose one of the following options:
-0. Exit
-1. Display access token
-2. List calendar events
-2
-Events:
-Subject: Team meeting
-  Organizer: Adele Vance
-  Start: 5/22/19, 3:00 PM
-  End: 5/22/19, 4:00 PM
-Subject: Team Lunch
-  Organizer: Adele Vance
-  Start: 5/24/19, 6:30 PM
-  End: 5/24/19, 8:00 PM
-Subject: Flight to Redmond
-  Organizer: Adele Vance
-  Start: 5/26/19, 4:30 PM
-  End: 5/26/19, 7:00 PM
-Subject: Let's meet to discuss strategy
-  Organizer: Patti Fernandez
-  Start: 5/27/19, 10:00 PM
-  End: 5/27/19, 10:30 PM
-Subject: All-hands meeting
-  Organizer: Adele Vance
-  Start: 5/28/19, 3:30 PM
-  End: 5/28/19, 5:00 PM
-```
+    Please choose one of the following options:
+    0. Exit
+    1. Display access token
+    2. List calendar events
+    2
+    Events:
+    Subject: Team meeting
+      Organizer: Adele Vance
+      Start: 5/22/19, 3:00 PM
+      End: 5/22/19, 4:00 PM
+    Subject: Team Lunch
+      Organizer: Adele Vance
+      Start: 5/24/19, 6:30 PM
+      End: 5/24/19, 8:00 PM
+    Subject: Flight to Redmond
+      Organizer: Adele Vance
+      Start: 5/26/19, 4:30 PM
+      End: 5/26/19, 7:00 PM
+    Subject: Let's meet to discuss strategy
+      Organizer: Patti Fernandez
+      Start: 5/27/19, 10:00 PM
+      End: 5/27/19, 10:30 PM
+    Subject: All-hands meeting
+      Organizer: Adele Vance
+      Start: 5/28/19, 3:30 PM
+      End: 5/28/19, 5:00 PM
+    ```

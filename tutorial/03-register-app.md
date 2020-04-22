@@ -12,7 +12,7 @@ En este ejercicio, creará una nueva aplicación de Azure AD con el centro de ad
 
     - Establezca **Nombre** como `.NET Core Graph Tutorial`.
     - Establezca **Tipos de cuenta admitidos** en **Cuentas en cualquier directorio de organización y cuentas personales de Microsoft**.
-    - Deje **URI de redireccionamiento** vacía.
+    - En **URI de redireccionamiento**, cambie la lista desplegable a **cliente público (móvil & escritorio)** y establezca `https://login.microsoftonline.com/common/oauth2/nativeclient`el valor en.
 
     ![Captura de pantalla de la página registrar una aplicación](./images/aad-register-an-app.png)
 
@@ -20,10 +20,6 @@ En este ejercicio, creará una nueva aplicación de Azure AD con el centro de ad
 
     ![Captura de pantalla del identificador de la aplicación del nuevo registro de la aplicación](./images/aad-application-id.png)
 
-1. Seleccione el vínculo **Agregar un URI de redireccionamiento** . En la página **URI de redireccionamiento** , busque la sección **URI de redireccionamiento sugeridos para clientes públicos (móvil, escritorio)** . Seleccione el `https://login.microsoftonline.com/common/oauth2/nativeclient` URI.
-
-    ![Captura de pantalla de la página URI de redireccionamiento](./images/aad-redirect-uris.png)
-
-1. Busque la sección **tipo de cliente predeterminado** y cambie la opción **tratar aplicación como un cliente público** cambie a **sí**y, a continuación, elija **Guardar**.
+1. Seleccione **Autenticación** en **Administrar**. Busque la sección **Configuración avanzada** y cambie el valor de la opción **tratar la aplicación como un cliente público** a **sí**y, a continuación, elija **Guardar**.
 
     ![Captura de pantalla de la sección tipo de cliente predeterminado](./images/aad-default-client-type.png)
