@@ -28,7 +28,13 @@ En este ejercicio, incorporará Microsoft Graph a la aplicación. Para esta apli
                 try
                 {
                     // GET /me
-                    return await graphClient.Me.Request().GetAsync();
+                    return await graphClient.Me
+                        .Request()
+                        .Select(u => new{
+                            u.DisplayName,
+                            u.MailboxSettings
+                        })
+                        .GetAsync();
                 }
                 catch (ServiceException ex)
                 {
@@ -40,13 +46,13 @@ En este ejercicio, incorporará Microsoft Graph a la aplicación. Para esta apli
     }
     ```
 
-1. Agregue el siguiente código en `Main` **Program.CS** justo después de la `GetAccessToken` llamada para obtener el usuario y generar el nombre para mostrar del usuario.
+1. Agregue el siguiente código en `Main` in **./Program.CS** justo después de la `GetAccessToken` llamada para obtener el usuario y generar el nombre para mostrar del usuario.
 
     :::code language="csharp" source="../demo/GraphTutorial/Program.cs" id="GetUserSnippet":::
 
 Si ejecuta la aplicación ahora, una vez que inicie sesión en la aplicación, le agradecerá por su nombre.
 
-## <a name="get-calendar-events-from-outlook"></a>Obtener eventos de calendario de Outlook
+## <a name="get-a-calendar-view"></a>Obtener una vista de calendario
 
 1. Agregue la siguiente función a la `GraphHelper` clase para obtener los eventos del calendario del usuario.
 
@@ -54,9 +60,12 @@ Si ejecuta la aplicación ahora, una vez que inicie sesión en la aplicación, l
 
 Tenga en cuenta lo que está haciendo este código.
 
-- La dirección URL a la que se `/me/events`llamará es.
+- La dirección URL a la que se llamará es `/me/calendarview` .
+- Los `startDateTime` `endDateTime` parámetros y definen el inicio y el final de la vista de calendario.
+- El `Prefer: outlook.timezone` encabezado hace que el `start` y `end` de los eventos se devuelvan en la zona horaria del usuario.
+- La `Top` función solicita un máximo de 50 eventos.
 - La `Select` función limita los campos devueltos para cada evento a solo aquellos que la aplicación usará realmente.
-- La `OrderBy` función ordena los resultados por la fecha y hora en que se crearon, con el elemento más reciente en primer lugar.
+- La `OrderBy` función ordena los resultados por fecha y hora de inicio.
 
 ## <a name="display-the-results"></a>Mostrar los resultados
 
@@ -68,41 +77,46 @@ Tenga en cuenta lo que está haciendo este código.
 
     :::code language="csharp" source="../demo/GraphTutorial/Program.cs" id="ListEventsSnippet":::
 
-1. Agregue lo siguiente justo después del `// List the calendar` comentario en la `Main` función.
+1. Agregue lo siguiente justo después del `// List the calendar` Comentario en la `Main` función.
 
     ```csharp
-    ListCalendarEvents();
+    ListCalendarEvents(
+        user.MailboxSettings.TimeZone,
+        $"{user.MailboxSettings.DateFormat} {user.MailboxSettings.TimeFormat}"
+    );
     ```
 
-1. Guarde todos los cambios y ejecute la aplicación. Elija la opción **lista de eventos de calendario** para ver una lista de los eventos del usuario.
+1. Guarde todos los cambios y ejecute la aplicación. Elija la opción **Ver calendario de esta semana** para ver una lista de los eventos del usuario.
 
     ```Shell
-    Welcome Adele Vance
+    Welcome Lynne Robbins!
 
     Please choose one of the following options:
     0. Exit
     1. Display access token
-    2. List calendar events
+    2. View this week's calendar
+    3. Add an event
     2
     Events:
-    Subject: Team meeting
-      Organizer: Adele Vance
-      Start: 5/22/19, 3:00 PM
-      End: 5/22/19, 4:00 PM
-    Subject: Team Lunch
-      Organizer: Adele Vance
-      Start: 5/24/19, 6:30 PM
-      End: 5/24/19, 8:00 PM
-    Subject: Flight to Redmond
-      Organizer: Adele Vance
-      Start: 5/26/19, 4:30 PM
-      End: 5/26/19, 7:00 PM
-    Subject: Let's meet to discuss strategy
-      Organizer: Patti Fernandez
-      Start: 5/27/19, 10:00 PM
-      End: 5/27/19, 10:30 PM
-    Subject: All-hands meeting
-      Organizer: Adele Vance
-      Start: 5/28/19, 3:30 PM
-      End: 5/28/19, 5:00 PM
+    Subject: Meeting
+      Organizer: Lynne Robbins
+      Start: 9/28/2020 10:00 AM
+      End: 9/28/2020 11:30 AM
+    Subject: Weekly meeting
+      Organizer: Lynne Robbins
+      Start: 9/28/2020 2:00 PM
+      End: 9/28/2020 3:00 PM
+    Subject: Carpool
+      Organizer: Lynne Robbins
+      Start: 9/28/2020 4:00 PM
+      End: 9/28/2020 5:30 PM
+    Subject: Tailspin Toys Proposal Review + Lunch
+      Organizer: Lidia Holloway
+      Start: 9/29/2020 12:00 PM
+      End: 9/29/2020 1:00 PM
+    Subject: Weekly meeting
+      Organizer: Lynne Robbins
+      Start: 9/29/2020 2:00 PM
+      End: 9/29/2020 3:00 PM
+    Subject: Project Tailspin
     ```

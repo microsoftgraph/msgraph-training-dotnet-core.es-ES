@@ -12,8 +12,14 @@ En este ejercicio, ampliará la aplicación del ejercicio anterior para admitir 
 
     ```Shell
     dotnet user-secrets set appId "YOUR_APP_ID_HERE"
-    dotnet user-secrets set scopes "User.Read;Calendars.Read"
+    dotnet user-secrets set scopes "User.Read;MailboxSettings.Read;Calendars.ReadWrite"
     ```
+
+    Echemos un vistazo a los ámbitos de permisos que acaba de establecer.
+
+    - **User. Read** permitirá a la aplicación leer el perfil del usuario que ha iniciado sesión para obtener información, como el nombre para mostrar y la dirección de correo electrónico.
+    - **MailboxSettings. Read** permitirá que la aplicación Lea la zona horaria preferida del usuario, el formato de fecha y el formato de hora.
+    - **Calendars. ReadWrite** permitirá que la aplicación Lea los eventos existentes en el calendario del usuario y agregue nuevos eventos.
 
 ## <a name="implement-sign-in"></a>Implementar el inicio de sesión
 
@@ -28,25 +34,25 @@ En esta sección, creará un proveedor de autenticación que se puede usar con e
 
 Considere lo que hace este código.
 
-- Usa la implementación de `IPublicClientApplication` MSAL para solicitar y administrar los tokens.
+- Usa la implementación de MSAL `IPublicClientApplication` para solicitar y administrar los tokens.
 - La `GetAccessToken` función:
   - Inicia sesión en el usuario si aún no ha iniciado sesión con el flujo de código de dispositivo.
   - Garantiza que el token devuelto siempre se actualiza usando la `AcquireTokenSilent` función, que devuelve el token almacenado en caché si no ha expirado y actualiza el token si ha expirado.
-- Implementa la `IAuthenticationProvider` interfaz para que el SDK de Graph pueda usar la clase para autenticar las llamadas de gráficos.
+- Implementa la interfaz para `IAuthenticationProvider` que el SDK de Graph pueda usar la clase para autenticar las llamadas de gráficos.
 
 ## <a name="sign-in-and-display-the-access-token"></a>Iniciar sesión y mostrar el token de acceso
 
-En esta sección se actualizará la aplicación para que llame `GetAccessToken` a la función, que iniciará sesión en el usuario. También se agregará código para mostrar el token.
+En esta sección se actualizará la aplicación para que llame a la `GetAccessToken` función, que iniciará sesión en el usuario. También se agregará código para mostrar el token.
 
 1. Agregue la siguiente función a la clase `Program`.
 
     :::code language="csharp" source="../demo/GraphTutorial/Program.cs" id="LoadAppSettingsSnippet":::
 
-1. Agregue el siguiente código a la `Main` función inmediatamente después de `Console.WriteLine(".NET Core Graph Tutorial\n");` la línea.
+1. Agregue el siguiente código a la `Main` función inmediatamente después de la `Console.WriteLine(".NET Core Graph Tutorial\n");` línea.
 
     :::code language="csharp" source="../demo/GraphTutorial/Program.cs" id="InitializationSnippet":::
 
-1. Agregue el siguiente código a la `Main` función inmediatamente después de `// Display access token` la línea.
+1. Agregue el siguiente código a la `Main` función inmediatamente después de la `// Display access token` línea.
 
     ```csharp
     Console.WriteLine($"Access token: {accessToken}\n");
