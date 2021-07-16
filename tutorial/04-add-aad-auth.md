@@ -1,48 +1,67 @@
 <!-- markdownlint-disable MD002 MD041 -->
 
-En este ejercicio, ampliará la aplicación del ejercicio anterior para admitir la autenticación con Azure AD. Esto es necesario para obtener el token de acceso de OAuth necesario para llamar a Microsoft Graph. En este paso, integrará la [biblioteca de autenticación de Microsoft (MSAL) para .net](https://github.com/AzureAD/microsoft-authentication-library-for-dotnet) en la aplicación.
+En este ejercicio, extenderá la aplicación desde el ejercicio anterior para admitir la autenticación con Azure AD. Esto es necesario para obtener el token de acceso OAuth necesario para llamar a Microsoft Graph. En este paso, integrará la Biblioteca de autenticación de [Microsoft (MSAL) para .NET](https://github.com/AzureAD/microsoft-authentication-library-for-dotnet) en la aplicación.
 
-1. Inicialice el [almacén secreto de desarrollo .net](/aspnet/core/security/app-secrets) abriendo la CLI en el directorio que contiene **GraphTutorial. csproj** y ejecutando el siguiente comando.
+1. Inicialice el almacén secreto de desarrollo de [.NET](/aspnet/core/security/app-secrets) abriendo la CLI en el directorio que contiene **GraphTutorial.csproj** y ejecutando el siguiente comando.
 
     ```Shell
     dotnet user-secrets init
     ```
 
-1. Agregue el identificador de la aplicación y una lista de ámbitos necesarios al almacén secreto mediante los comandos siguientes. Reemplace `YOUR_APP_ID_HERE` por el identificador de la aplicación que creó en Azure portal.
+1. Agregue el identificador de aplicación y una lista de ámbitos necesarios al almacén secreto mediante los siguientes comandos. Reemplace `YOUR_APP_ID_HERE` por el identificador de aplicación que creó en Azure Portal.
 
     ```Shell
     dotnet user-secrets set appId "YOUR_APP_ID_HERE"
     dotnet user-secrets set scopes "User.Read;MailboxSettings.Read;Calendars.ReadWrite"
     ```
 
-    Echemos un vistazo a los ámbitos de permisos que acaba de establecer.
+    Veamos los ámbitos de permisos que acaba de establecer.
 
-    - **User. Read** permitirá a la aplicación leer el perfil del usuario que ha iniciado sesión para obtener información, como el nombre para mostrar y la dirección de correo electrónico.
-    - **MailboxSettings. Read** permitirá que la aplicación Lea la zona horaria preferida del usuario, el formato de fecha y el formato de hora.
-    - **Calendars. ReadWrite** permitirá que la aplicación Lea los eventos existentes en el calendario del usuario y agregue nuevos eventos.
+    - **User.Read** permitirá a la aplicación leer el perfil del usuario que ha iniciado sesión para obtener información como el nombre para mostrar y la dirección de correo electrónico.
+    - **MailboxSettings.Read permitirá** a la aplicación leer la zona horaria preferida del usuario, el formato de fecha y el formato de hora.
+    - **Calendars.ReadWrite** permitirá a la aplicación leer los eventos existentes en el calendario del usuario y agregar nuevos eventos.
 
 ## <a name="implement-sign-in"></a>Implementar el inicio de sesión
 
-En esta sección, creará un proveedor de autenticación que se puede usar con el SDK de Graph y también se puede usar para solicitar explícitamente un token de acceso mediante el [flujo de código de dispositivo](https://docs.microsoft.com/azure/active-directory/develop/v2-oauth2-device-code).
+En esta sección, usarás la clase para solicitar un token de acceso `DeviceCodeCredential` mediante el flujo de código del [dispositivo](https://docs.microsoft.com/azure/active-directory/develop/v2-oauth2-device-code).
 
-### <a name="create-an-authentication-provider"></a>Crear un proveedor de autenticación
+1. Cree un nuevo directorio en el **directorio GraphTutorial** denominado **Graph**.
+1. Cree un nuevo archivo en el directorio **Graph** denominado **GraphHelper.cs** y agregue el siguiente código a ese archivo.
 
-1. Cree un nuevo directorio en el directorio **GraphTutorial** denominado **Authentication (autenticación**).
-1. Cree un nuevo archivo en el directorio de **autenticación** denominado **DeviceCodeAuthProvider.CS** y agregue el siguiente código a ese archivo.
+    ```csharp
+    using System;
+    using System.Collections.Generic;
+    using System.Threading;
+    using System.Threading.Tasks;
+    using Azure.Core;
+    using Azure.Identity;
+    using Microsoft.Graph;
+    using TimeZoneConverter;
 
-    :::code language="csharp" source="../demo/GraphTutorial/Authentication/DeviceCodeAuthProvider.cs" id="AuthProviderSnippet":::
+    namespace GraphTutorial
+    {
+        public class GraphHelper
+        {
+            private static DeviceCodeCredential tokenCredential;
+            private static GraphServiceClient graphClient;
 
-Considere lo que hace este código.
+            public static void Initialize(string clientId,
+                                          string[] scopes,
+                                          Func<DeviceCodeInfo, CancellationToken, Task> callBack)
+            {
+                tokenCredential = new DeviceCodeCredential(callBack, clientId);
+                graphClient = new GraphServiceClient(tokenCredential, scopes);
+            }
 
-- Usa la implementación de MSAL `IPublicClientApplication` para solicitar y administrar los tokens.
-- La `GetAccessToken` función:
-  - Inicia sesión en el usuario si aún no ha iniciado sesión con el flujo de código de dispositivo.
-  - Garantiza que el token devuelto siempre se actualiza usando la `AcquireTokenSilent` función, que devuelve el token almacenado en caché si no ha expirado y actualiza el token si ha expirado.
-- Implementa la interfaz para `IAuthenticationProvider` que el SDK de Graph pueda usar la clase para autenticar las llamadas de gráficos.
-
-## <a name="sign-in-and-display-the-access-token"></a>Iniciar sesión y mostrar el token de acceso
-
-En esta sección se actualizará la aplicación para que llame a la `GetAccessToken` función, que iniciará sesión en el usuario. También se agregará código para mostrar el token.
+            public static async Task<string> GetAccessTokenAsync(string[] scopes)
+            {
+                var context = new TokenRequestContext(scopes);
+                var response = await tokenCredential.GetTokenAsync(context);
+                return response.Token;
+            }
+        }
+    }
+    ```
 
 1. Agregue la siguiente función a la clase `Program`.
 
@@ -58,7 +77,7 @@ En esta sección se actualizará la aplicación para que llame a la `GetAccessTo
     Console.WriteLine($"Access token: {accessToken}\n");
     ```
 
-1. Compile y ejecute la aplicación. La aplicación muestra una dirección URL y un código de dispositivo.
+1. Compila y ejecuta la aplicación. La aplicación muestra una dirección URL y un código de dispositivo.
 
     ```Shell
     PS C:\Source\GraphTutorial> dotnet run
@@ -68,6 +87,6 @@ En esta sección se actualizará la aplicación para que llame a la `GetAccessTo
     ```
 
     > [!TIP]
-    > Si encuentra errores, compare su **Program.CS** con el [ejemplo en github](https://github.com/microsoftgraph/msgraph-training-dotnet-core/blob/master/demo/GraphTutorial/Program.cs).
+    > Si encuentra errores, compare **Program.cs** con el [ejemplo de GitHub](https://github.com/microsoftgraph/msgraph-training-dotnet-core/blob/master/demo/GraphTutorial/Program.cs).
 
-1. Abra un explorador y vaya a la dirección URL que se muestra. Escriba el código proporcionado e inicie sesión. Una vez finalizado, vuelva a la aplicación y elija el **1. Muestra** la opción de token de acceso para mostrar el token de acceso.
+1. Abra un explorador y vaya a la dirección URL mostrada. Escriba el código proporcionado e inicie sesión. Una vez completado, vuelva a la aplicación y elija **el 1. Muestra la opción de token** de acceso para mostrar el token de acceso.

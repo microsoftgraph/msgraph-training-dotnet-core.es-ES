@@ -1,53 +1,14 @@
 <!-- markdownlint-disable MD002 MD041 -->
 
-En este ejercicio incorporará Microsoft Graph en la aplicación. Para esta aplicación, usará la biblioteca cliente [.NET](https://github.com/microsoftgraph/msgraph-sdk-dotnet) de Microsoft Graph para realizar llamadas a Microsoft Graph.
+En este ejercicio, incorporará el Graph Microsoft en la aplicación. Para esta aplicación, usará la biblioteca de [cliente de .NET](https://github.com/microsoftgraph/msgraph-sdk-dotnet) de Microsoft Graph para realizar llamadas a Microsoft Graph.
 
 ## <a name="get-user-details"></a>Obtener detalles del usuario
 
-1. Cree un nuevo directorio en el **directorio GraphTutorial** denominado **Graph**.
-1. Cree un nuevo archivo en el directorio **de Graph** denominado **GraphHelper.cs** y agregue el siguiente código a ese archivo.
+1. Abra **./Graph/GraphHelper.cs** y agregue la siguiente función a la **clase GraphHelper.**
 
-    ```csharp
-    using Microsoft.Graph;
-    using System;
-    using System.Collections.Generic;
-    using System.Threading.Tasks;
-    using TimeZoneConverter;
+    :::code language="csharp" source="../demo/GraphTutorial/Graph/GraphHelper.cs" id="GetMeSnippet":::
 
-    namespace GraphTutorial
-    {
-        public class GraphHelper
-        {
-            private static GraphServiceClient graphClient;
-            public static void Initialize(IAuthenticationProvider authProvider)
-            {
-                graphClient = new GraphServiceClient(authProvider);
-            }
-
-            public static async Task<User> GetMeAsync()
-            {
-                try
-                {
-                    // GET /me
-                    return await graphClient.Me
-                        .Request()
-                        .Select(u => new{
-                            u.DisplayName,
-                            u.MailboxSettings
-                        })
-                        .GetAsync();
-                }
-                catch (ServiceException ex)
-                {
-                    Console.WriteLine($"Error getting signed-in user: {ex.Message}");
-                    return null;
-                }
-            }
-        }
-    }
-    ```
-
-1. Agregue el siguiente código en ./Program.cs justo después de la llamada para obtener el usuario y generar el nombre para mostrar `Main` del  `GetAccessToken` usuario.
+1. Agregue el siguiente código en `Main` **./Program.cs** justo después de la llamada para obtener el usuario y generar el nombre `GetAccessToken` para mostrar del usuario.
 
     :::code language="csharp" source="../demo/GraphTutorial/Program.cs" id="GetUserSnippet":::
 
@@ -59,18 +20,18 @@ Si ejecutas la aplicación ahora, después de iniciar sesión en la aplicación 
 
     :::code language="csharp" source="../demo/GraphTutorial/Graph/GraphHelper.cs" id="GetEventsSnippet":::
 
-Ten en cuenta lo que hace este código.
+Tenga en cuenta lo que está haciendo este código.
 
-- La dirección URL a la que se llamará es `/me/calendarview` .
+- La dirección URL a la que se llamará es `/me/calendarview`.
 - Los `startDateTime` parámetros y definen el inicio y el final de la vista de `endDateTime` calendario.
-- El `Prefer: outlook.timezone` encabezado hace que los eventos y los eventos se `start` `end` devuelvan en la zona horaria del usuario.
+- El `Prefer: outlook.timezone` encabezado hace que el y de los eventos se `start` `end` devuelvan en la zona horaria del usuario.
 - La `Top` función solicita como máximo 50 eventos.
 - La `Select` función limita los campos devueltos para cada evento a solo aquellos que la aplicación usará realmente.
-- La `OrderBy` función ordena los resultados por fecha y hora de inicio.
+- La `OrderBy` función ordena los resultados por la fecha y hora de inicio.
 
 ## <a name="display-the-results"></a>Mostrar los resultados
 
-1. Agregue la siguiente función a la clase para dar formato a las propiedades `Program` [dateTimeTimeZone](/graph/api/resources/datetimetimezone?view=graph-rest-1.0) de Microsoft Graph en un formato fácil de usar.
+1. Agregue la siguiente función a la clase para dar formato a las propiedades `Program` [dateTimeTimeZone](/graph/api/resources/datetimetimezone?view=graph-rest-1.0) de Microsoft Graph un formato fácil de usar.
 
     :::code language="csharp" source="../demo/GraphTutorial/Program.cs" id="FormatDateSnippet":::
 
